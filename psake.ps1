@@ -88,19 +88,19 @@ Task Test -Depends Sanity {
     # initialised as a git repo and git is available. TODO: Support Linux
     $coverage_file = $null
     $git_folder = Join-Path -Path $ProjectRoot -ChildPath '.git'
-    if ((Get-Command -Name git.exe -ErrorAction Ignore) -and (Test-Path -LiteralPath $git_folder)) {
-        $coverage_file = Join-Path -Path $BuildPath -ChildPath "CodeCoverage_PS$($ps_version)_$($test_date).json"
-        $code_cov_params = @{
-            CodeCoverage = $test_results.CodeCoverage
-            RepoRoot = $ProjectRoot
-            Path = $coverage_file
-        }
-        Export-CodeCovIoJson @code_cov_params
+    #if ((Get-Command -Name git.exe -ErrorAction Ignore) -and (Test-Path -LiteralPath $git_folder)) {
+    #    $coverage_file = Join-Path -Path $BuildPath -ChildPath "CodeCoverage_PS$($ps_version)_$($test_date).json"
+    #    $code_cov_params = @{
+    #        CodeCoverage = $test_results.CodeCoverage
+    #        RepoRoot = $ProjectRoot
+    #        Path = $coverage_file
+    #    }
+    #    Export-CodeCovIoJson @code_cov_params
 
-        # A warning in git may cause LASTEXITCODE to not be 0, we reset it here
-        # so the pipeline doesn't fail
-        $global:LASTEXITCODE = 0
-    }
+    #    # A warning in git may cause LASTEXITCODE to not be 0, we reset it here
+    #    # so the pipeline doesn't fail
+    #    $global:LASTEXITCODE = 0
+    #}
 
     if ($env:BHBuildSystem -eq 'AppVeyor') {
         $web_client = New-Object -TypeName System.Net.WebClient
