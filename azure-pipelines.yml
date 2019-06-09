@@ -5,13 +5,13 @@ jobs:
   steps:
   - script: echo Hello from Ubuntu
 
-- job: Windows PS Desktop
+- job: Windows_PS_Desktop
   pool:
     vmImage: windows-2019
   steps:
   - script: echo Hello from Windows Desktop
 
-- job: Windows PS Core
+- job: Windows_PS_Core
   pool:
     vmImage: windows-2019
   steps:
