@@ -96,6 +96,10 @@ Task Test -Depends Sanity {
             Path = $coverage_file
         }
         Export-CodeCovIoJson @code_cov_params
+
+        # A warning in git may cause LASTEXITCODE to not be 0, we reset it here
+        # so the pipeline doesn't fail
+        $global:LASTEXITCODE = 0
     }
 
     if ($env:BHBuildSystem -eq 'AppVeyor') {

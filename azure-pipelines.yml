@@ -2,21 +2,21 @@ stages:
 - stage: Test
   jobs:
   - job: TestLinuxPSCore
-    displayName: Test - Linux PowerShell Core
+    displayName: Linux PowerShell Core
     pool:
       vmImage: ubuntu-16.04
     steps:
     - script: pwsh -File ./build.ps1
 
   - job: TestWindowsPSDesktop
-    displayName: Test - Windows PowerShell Desktop
+    displayName: Windows PowerShell Desktop
     pool:
       vmImage: windows-2019
     steps:
     - script: powershell.exe -File .\build.ps1
 
   - job: TestWindowsPSCore
-    displayName: Test - Windows PowerShell Core
+    displayName: Windows PowerShell Core
     pool:
       vmImage: windows-2019
     steps:
@@ -25,6 +25,6 @@ stages:
 - stage: Publish
   jobs:
   - job: Publish
-    displayName: Publish PowerShell Module
+    displayName: PowerShell Module
     steps:
     - script: echo Publishing code
