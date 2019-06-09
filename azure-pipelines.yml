@@ -3,16 +3,16 @@ jobs:
   pool:
     vmImage: ubuntu-16.04
   steps:
-  - script: echo Hello from Ubuntu
+  - script: pwsh -File ./build.ps1
 
 - job: Windows_PS_Desktop
   pool:
     vmImage: windows-2019
   steps:
-  - script: echo Hello from Windows Desktop
+  - script: powershell.exe -File .\build.ps1
 
 - job: Windows_PS_Core
   pool:
     vmImage: windows-2019
   steps:
-  - script: echo Hello from Windows Core
+  - script: pwsh.exe -File .\build.ps1
