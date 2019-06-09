@@ -2,12 +2,17 @@ jobs:
 - job: Linux
   pool:
     vmImage: ubuntu-16.04
+  steps:
+  - echo Hello from Ubuntu
+
 - job: Windows PS Desktop
   pool:
     vmImage: windows-2019
+  steps:
+  - echo Hello from Windows Desktop
+
 - job: Windows PS Core
   pool:
     vmImage: windows-2019
-
-steps:
-- script: echo Hello, World!
+  steps:
+  - echo Hello from Windows Core
