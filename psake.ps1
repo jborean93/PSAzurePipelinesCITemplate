@@ -94,7 +94,6 @@ Task Test -Depends Sanity {
             CodeCoverage = $test_results.CodeCoverage
             RepoRoot = $ProjectRoot
             Path = $coverage_file
-            Verbose = $false  # Normally it will show verbose messages which are unrelated
         }
         Export-CodeCovIoJson @code_cov_params
     }
