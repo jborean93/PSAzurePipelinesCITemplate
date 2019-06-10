@@ -132,7 +132,7 @@ Task Test -Depends Sanity {
         if (Get-Command -Name codecov.exe -ErrorAction Ignore) {
             $code_cov_exe = 'codecov.exe'
         } else {
-            $code_cov_exe = 'sh'
+            $code_cov_exe = 'bash'
             $upload_args.Insert(0, './codecov.sh')
         }
         &$code_cov_exe $upload_args
