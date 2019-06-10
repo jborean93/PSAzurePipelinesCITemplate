@@ -29,6 +29,11 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: Build/TestResults_PS*.xml
 
+    - task: PublishPipelineArtifact@0
+      inputs:
+        artifactName: Linux PowerShell Core
+        targetPath: Build
+
   - job: TestWindowsPSDesktop
     displayName: Windows PowerShell Desktop
     pool:
@@ -47,7 +52,7 @@ stages:
 
     - task: PublishPipelineArtifact@0
       inputs:
-        artifactName: module
+        artifactName: Windows PowerShell Desktop
         targetPath: Build
 
   - job: TestWindowsPSCore
@@ -66,6 +71,11 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: Build/TestResults_PS*.xml
 
+    - task: PublishPipelineArtifact@0
+      inputs:
+        artifactName: Windows PowerShell Core
+        targetPath: Build
+
 - stage: Publish
   condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/v'))
   jobs:
@@ -75,12 +85,12 @@ stages:
     steps:
     - task: DownloadPipelineArtifact@0
       inputs:
-        artifactName: module
+        artifactName: Windows PowerShell Desktop
         targetPath: Build
 
     - pwsh: |
         Install-Module -Name PSDeploy -Force
         Invoke-PSDeploy -Path ./deploy.psdeploy.ps1 -Recurse $false -Force -Tags Release
-      displayName: PowerShell Gallery
+      displayName: Publish Nupkg
       env:
         NugetApiKey: $(nuget_api_key)

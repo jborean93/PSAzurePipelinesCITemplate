@@ -3,7 +3,7 @@
 
 @{
     RootModule = 'PSAzurePipelinesCITemplate.psm1'
-    ModuleVersion = '0.1.0'
+    ModuleVersion = '0.1.1'
     GUID = '1964fa76-d92f-432a-81e8-fb44b341c7a5'
     Author = 'Jordan Borean'
     Copyright = 'Copyright (c) 2019 by Jordan Borean, Red Hat, licensed under MIT.'
