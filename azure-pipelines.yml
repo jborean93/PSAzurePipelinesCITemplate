@@ -85,7 +85,7 @@ stages:
         summaryFileLocation: Build/Coverage_PS*.xml
 
 - stage: Publish
-  #condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/v'))
+  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/v'))
   jobs:
   - job: Publish
     pool:
