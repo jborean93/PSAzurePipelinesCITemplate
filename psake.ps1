@@ -106,8 +106,7 @@ Task Test -Depends Sanity {
         Write-Error "Failed '$($test_results.FailedCount)' tests, build failed"
     }
 
-    # TODO: Support Linux
-    if ((Get-Command -Name codecov.exe -ErrorAction Ignore) -and $env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines', 'Travis CI')) {
+    if ($env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines', 'Travis CI')) {
         $code_cov_file = Join-Path -Path $BuildPath -ChildPath "Coverage_CodeCov_$($output_id).json"
         $code_cov_params = @{
             CodeCoverage = $test_results.CodeCoverage
@@ -130,7 +129,12 @@ Task Test -Depends Sanity {
             $upload_args.Add($env:CODECOV_TOKEN)
         }
 
-        &codecov.exe $upload_args
+        if (Get-Command -Name codecov.exe -ErrorAction Ignore) {
+            $code_cov_exe = 'codecov.exe'
+        } else {
+            $code_cov_exe = 'codecov.sh'
+        }
+        &$code_cov_exe $upload_args
     }
     $nl
 }
