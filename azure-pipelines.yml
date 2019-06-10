@@ -60,7 +60,7 @@ stages:
     - task: PublishPipelineArtifact@0
       inputs:
         artifactName: module
-        targetPath: Build/$(Build.Repository.Name)
+        targetPath: Build
 
   - job: TestWindowsPSCore
     displayName: Windows PowerShell Core
