@@ -26,6 +26,9 @@ Function Export-CodeCovIO {
     .EXAMPLE Format Pester coverage to CodeCov json format
     $result = Invoke-Pester -Path Tests/* -CodeCoverage script.ps1 -PassThru
     Format-CodeCovIO -Coverage $result.CodeCoverage
+
+    .NOTES
+    I should look at adding this as an option for the Pester CodeCoverageOutputFormat
     #>
     [CmdletBinding()]
     Param (
@@ -76,6 +79,8 @@ Properties {
     $nl = [System.Environment]::NewLine
     $lines = '----------------------------------------------------------------------'
     $BuildPath = Join-Path -Path $ProjectRoot -ChildPath 'Build'
+    $ManifestFile = Get-Item -Path (Join-Path -Path $env:BHModulePath -ChildPath '*.psd1')
+    $ModuleFile = Get-Item -Path (Join-Path -Path $env:BHModulePath -ChildPath '*.psm1')
 
     $Verbose = @{}
     if ($env:BHCommitMessage -match '!verbose') {
@@ -132,6 +137,7 @@ Task Test -Depends Sanity {
     if (Test-Path -LiteralPath $private_path) {
         $code_coverage.Add([System.IO.Path]::Combine($private_path, '*.ps1'))
     }
+    $code_coverage.Add($ModuleFile.FullName)
 
     $ps_edition = 'Desktop'
     if ($PSVersionTable.ContainsKey('PSEdition')) {
@@ -201,23 +207,21 @@ Task Test -Depends Sanity {
 }
 
 Task Build -Depends Test {
-    $manifest_file = Get-Item -Path (Join-Path -Path $env:BHModulePath -ChildPath '*.psd1')
-    $module_file = Get-Item -Path (Join-Path -Path $env:BHModulePath -ChildPath '*.psm1')
-    $module_name = $manifest_file.BaseName
+    $module_name = $ManifestFile.BaseName
     $module_build = Join-Path -Path $BuildPath -ChildPath $module_name
 
     $lines
     "$nl`tSTATUS: Building PowerShell module with documentation to '$module_build'"
 
     New-Item -Path $module_build -ItemType Directory > $null
-    Copy-Item -LiteralPath $manifest_file.FullName -Destination (Join-Path -Path $module_build -ChildPath $manifest_file.Name)
+    Copy-Item -LiteralPath $ManifestFile.FullName -Destination (Join-Path -Path $module_build -ChildPath $ManifestFile.Name)
 
     # Read the existing module and split out the template section lines.
     $module_pre_template_lines = [System.Collections.Generic.List`1[String]]@()
     $module_template_lines = [System.Collections.Generic.List`1[String]]@()
     $module_post_template_lines = [System.Collections.Generic.List`1[String]]@()
     $template_section = $false  # $false == pre, $null == template, $true == post
-    foreach ($module_file_line in (Get-Content -LiteralPath $module_file.FullName)) {
+    foreach ($module_file_line in (Get-Content -LiteralPath $ModuleFile.FullName)) {
         if ($module_file_line -eq '### TEMPLATED EXPORT FUNCTIONS ###') {
             $template_section = $null
         } elseif ($module_file_line -eq '### END TEMPLATED EXPORT FUNCTIONS ###') {
@@ -269,7 +273,7 @@ Task Build -Depends Test {
     $module_pre_template_lines.AddRange($module_post_template_lines)
     $module_file_content = $module_pre_template_lines -join $nl
 
-    Set-Content -LiteralPath (Join-Path -Path $module_build -ChildPath $module_file.Name) -Value $module_file_content
+    Set-Content -LiteralPath (Join-Path -Path $module_build -ChildPath $ModuleFile.Name) -Value $module_file_content
 
     $nl
 }
