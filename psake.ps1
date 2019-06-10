@@ -147,7 +147,11 @@ Task Test -Depends Sanity {
     if ($PSVersionTable.ContainsKey('Platform')) {
         $ps_platform = $PSVersionTable.Platform
     }
-    $output_id = "PS{0}_{1}_{2}_{3}" -f ($ps_version, $ps_edition, $ps_platform, (Get-Date -UFormat "%Y%m%d-%H%M%S"))
+    $arch = switch([System.Environment]::Is64BitProcess) {
+        $true { "x64" }
+        $false { "x86" }
+    }
+    $output_id = "PS{0}_{1}_{2}_{3}_{4}" -f ($ps_version, $arch, $ps_edition, $ps_platform, (Get-Date -UFormat "%Y%m%d-%H%M%S"))
     $test_file = Join-Path -Path $BuildPath -ChildPath "TestResults_$($output_id).xml"
     $coverage_file = Join-Path -Path $BuildPath -ChildPath "Coverage_$($output_id).xml"
     $pester_params = @{
@@ -180,7 +184,9 @@ Task Test -Depends Sanity {
             OutPath = $code_cov_file
         }
         Export-CodeCovIO @code_cov_params
-        $coverage_id = "PowerShell-$ps_edition-$ps_version-$ps_platform"
+
+
+        $coverage_id = "PowerShell-$ps_edition-$ps_version-$arch-$ps_platform"
 
         "$nl`tSTATUS: Uploading code coverage results with the ID: $coverage_id"
         $upload_args = [System.Collections.Generic.List`1[System.String]]@(
