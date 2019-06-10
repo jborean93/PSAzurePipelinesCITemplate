@@ -15,7 +15,6 @@ stages:
     pool:
       vmImage: ubuntu-16.04
     steps:
-    - script: choco.exe install codecov --yes
     - script: pwsh -File ./build.ps1
       env:
         CODECOV_TOKEN: $(codecov_token)
@@ -35,7 +34,7 @@ stages:
     pool:
       vmImage: windows-2019
     steps:
-    - script: choco.exe install codecov --yes
+    - script: choco.exe install codecov --yes --no-progress
     - script: powershell.exe -File .\build.ps1
       env:
         CODECOV_TOKEN: $(codecov_token)
@@ -56,6 +55,7 @@ stages:
     pool:
       vmImage: windows-2019
     steps:
+    - script: choco.exe install codecov --yes --no-progress
     - script: pwsh.exe -File .\build.ps1
       env:
         CODECOV_TOKEN: $(codecov_token)
