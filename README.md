@@ -20,6 +20,11 @@ manual step:
     * Add a new variable with the name `codecov_token` and the value as the token from Code Cov
     * Set the padlock icon to set the variable as a secure variable
     * Save the variable
+* Setup the PowerShell Gallery API token for pushing the module on release
+    * Go to the [PowerShell Gallery](https://www.powershellgallery.com) and sign in
+    * Click on your account and go to `API Keys`
+    * Generate an API key if one has not already been generated
+    * Go to Azure DevOps and add a secure variable called `nuget_api_key` with that token
 
 
 ## Requirements
