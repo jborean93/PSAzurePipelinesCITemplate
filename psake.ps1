@@ -207,11 +207,6 @@ Task Test -Depends Sanity {
             "`"$coverage_id`""
         )
 
-        #if (Test-Path -LiteralPath env:CODECOV_TOKEN) {
-        #    $upload_args.Add('-t')
-        #    $upload_args.Add($env:CODECOV_TOKEN)
-        #}
-
         if (Get-Command -Name codecov.exe -ErrorAction Ignore) {
             $code_cov_exe = 'codecov.exe'
         } else {
