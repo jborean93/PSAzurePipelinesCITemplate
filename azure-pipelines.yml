@@ -99,7 +99,9 @@ stages:
     pool:
       vmImage: windows-2019
     steps:
-    - script: Invoke-PSDeploy -Path ./deploy.psdeploy.ps1 -Recurse -Force -Tags Release
+    - script: |
+        Install-Module -Name PSDeploy -Force
+        Invoke-PSDeploy -Path ./deploy.psdeploy.ps1 -Recurse -Force -Tags Release
       displayName: PowerShell Gallery
       env:
         NugetApiKey: $(nuget_api_key)
