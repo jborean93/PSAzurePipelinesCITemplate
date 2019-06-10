@@ -15,7 +15,7 @@ stages:
     pool:
       vmImage: ubuntu-16.04
     steps:
-    - script: curl -s https://codecov.io/bash -o codecov.sh; chmod +x codecov.sh
+    - script: wget -O codecov.sh https://codecov.io/bash -q; chmod +x codecov.sh
       displayName: Download codecov uploader
 
     - script: pwsh -File ./build.ps1
