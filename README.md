@@ -10,6 +10,17 @@
 A template repo for running CI of a PowerShell module with
 [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/).
 
+To setup an Azure Pipeline with a new repo you will need to do the following
+manual step:
+
+* Setup the CodeCov token for uploading coverage results
+    * Go to [codecov.io](https://codecov.io) and get the `CODECOV_TOKEN` for the new repository
+    * Go to Azure DevOps and edit the pipeline for the new repo
+    * Go to the variables section for the new pipeline
+    * Add a new variable with the name `codecov_token` and the value as the token from Code Cov
+    * Set the padlock icon to set the variable as a secure variable
+    * Save the variable
+
 
 ## Requirements
 

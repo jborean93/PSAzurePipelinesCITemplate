@@ -94,20 +94,6 @@ Task Test -Depends Sanity {
     }
     $test_results  = Invoke-Pester @pester_params @Verbose
 
-    # The file that is uploaded to CodeCov.io needs to be converted first. This can only be done if the repo has been
-    # initialised as a git repo and git is available. TODO: Support Linux
-    $coverage_file = $null
-    $git_folder = Join-Path -Path $ProjectRoot -ChildPath '.git'
-    if ((Get-Command -Name git.exe -ErrorAction Ignore) -and (Test-Path -LiteralPath $git_folder)) {
-        $coverage_file = Join-Path -Path $BuildPath -ChildPath "Coverage_CodeCov_$($output_id).json"
-        $code_cov_params = @{
-            CodeCoverage = $test_results.CodeCoverage
-            RepoRoot = $ProjectRoot
-            Path = $coverage_file
-        }
-        Export-CodeCovIoJson @code_cov_params
-    }
-
     if ($env:BHBuildSystem -eq 'AppVeyor') {
         $web_client = New-Object -TypeName System.Net.WebClient
         $web_client.UploadFile(
@@ -121,13 +107,20 @@ Task Test -Depends Sanity {
     }
 
     # TODO: Support Linux
-    if ((Get-Command -Name codecov.exe -ErrorAction Ignore) -and $env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines', 'Travis CI') -and $null -ne $coverage_file) {
+    if ((Get-Command -Name codecov.exe -ErrorAction Ignore) -and $env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines', 'Travis CI')) {
+        $code_cov_file = Join-Path -Path $BuildPath -ChildPath "Coverage_CodeCov_$($output_id).json"
+        $code_cov_params = @{
+            CodeCoverage = $test_results.CodeCoverage
+            RepoRoot = $ProjectRoot
+            Path = $coverage_file
+        }
+        Export-CodeCovIoJson @code_cov_params
         $coverage_id = "PowerShell-$ps_edition-$ps_version-$ps_platform"
 
         "$nl`tSTATUS: Uploading code coverage results with the ID: $coverage_id"
         $upload_args = [System.Collections.Generic.List`1[System.String]]@(
             '-f',
-            "`"$coverage_file`"",
+            "`"$code_cov_file`"",
             '-n',
             "`"$coverage_id`""
         )

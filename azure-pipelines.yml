@@ -15,7 +15,10 @@ stages:
     pool:
       vmImage: ubuntu-16.04
     steps:
+    - script: choco.exe install codecov --yes
     - script: pwsh -File ./build.ps1
+      env:
+        CODECOV_TOKEN: $(codecov_token)
     - task: PublishTestResults@2
       condition: always()
       inputs:
@@ -32,7 +35,10 @@ stages:
     pool:
       vmImage: windows-2019
     steps:
+    - script: choco.exe install codecov --yes
     - script: powershell.exe -File .\build.ps1
+      env:
+        CODECOV_TOKEN: $(codecov_token)
     - task: PublishTestResults@2
       condition: always()
       inputs:
@@ -51,6 +57,8 @@ stages:
       vmImage: windows-2019
     steps:
     - script: pwsh.exe -File .\build.ps1
+      env:
+        CODECOV_TOKEN: $(codecov_token)
     - task: PublishTestResults@2
       condition: always()
       inputs:
