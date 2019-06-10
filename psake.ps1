@@ -169,7 +169,7 @@ Task Test -Depends Sanity {
     if ($env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines', 'Travis CI')) {
         $code_cov_file = Join-Path -Path $BuildPath -ChildPath "Coverage_CodeCov_$($output_id).json"
         $code_cov_params = @{
-            CodeCoverage = $test_results.CodeCoverage
+            Coverage = $test_results.CodeCoverage
             Path = $ProjectRoot
             OutPath = $code_cov_file
         }
