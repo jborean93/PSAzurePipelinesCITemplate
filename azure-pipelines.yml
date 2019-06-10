@@ -1,4 +1,7 @@
 trigger:
+  branches:
+    include:
+    - '*'  # Need to explicitly set this as we have path exclusions
   paths:
     exclude:
     - README.md
