@@ -4,7 +4,67 @@
 )]
 Param ()
 
-#Requires -Module PSCodeCovIo
+Function Export-CodeCovIO {
+    <#
+    .SYNOPSIS
+    Generates CodeCov json from Pester results.
+
+    .DESCRIPTION
+    Takes in the Pester coverage results and generates a json file in the format the CodeCov.io expects. This can then
+    be uploaded to CodeCov using the codecov.exe tool.
+
+    .PARAMETER Coverage
+    The pester code coverage results.
+
+    .PARAMETER Path
+    The root path of the project, this should be the root directory of the git repo. Defaults to the current path in
+    PowerShell.
+
+    .PARAMETER OutPath
+    The output path of the formatted coverage json. This defaults to './CodeCov.json'.
+
+    .EXAMPLE Format Pester coverage to CodeCov json format
+    $result = Invoke-Pester -Path Tests/* -CodeCoverage script.ps1 -PassThru
+    Format-CodeCovIO -Coverage $result.CodeCoverage
+    #>
+    [CmdletBinding()]
+    Param (
+        [System.Object]
+        $Coverage,
+
+        [System.String]
+        $Path = '.',
+
+        [System.String]
+        $OutPath = (Join-Path -Path '.' -ChildPath 'CodeCov.json')
+    )
+
+    # Resolve the path to turn relative to absolute paths
+    $Path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+    $OutPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutPath)
+
+    $code_cov_info = @{
+        coverage = @{}
+    }
+
+    foreach ($file in $Coverage.AnalyzedFiles) {
+        $line_info = [System.Collections.Generic.SortedDictionary`2[[System.String], [System.Object]]]@{}
+
+        $missed_lines = @($Coverage.MissedCommands | Where-Object -Property File -EQ $file)
+        $hit_lines = @($Coverage.HitCommands | Where-Object -Property File -EQ $file)
+        foreach ($entry in $missed_lines + $hit_lines) {
+            for ($i = $entry.StartLine; $i -le $entry.EndLine; $i++) {
+                $line_info.$i = $entry.HitCount
+            }
+        }
+
+        $processed_filename = $file.Substring($Path.Length + 1).Replace('\', '/')
+        $code_cov_info.coverage.$processed_filename = $line_info
+    }
+
+    $code_cov_json = ConvertTo-Json -InputObject $code_cov_info -Compress
+    Set-Content -LiteralPath $OutPath -Value $code_cov_json -Force
+}
 
 Properties {
     # Find the build folder based on build system
@@ -110,10 +170,10 @@ Task Test -Depends Sanity {
         $code_cov_file = Join-Path -Path $BuildPath -ChildPath "Coverage_CodeCov_$($output_id).json"
         $code_cov_params = @{
             CodeCoverage = $test_results.CodeCoverage
-            RepoRoot = $ProjectRoot
-            Path = $code_cov_file
+            Path = $ProjectRoot
+            OutPath = $code_cov_file
         }
-        Export-CodeCovIoJson @code_cov_params
+        Export-CodeCovIO @code_cov_params
         $coverage_id = "PowerShell-$ps_edition-$ps_version-$ps_platform"
 
         "$nl`tSTATUS: Uploading code coverage results with the ID: $coverage_id"
