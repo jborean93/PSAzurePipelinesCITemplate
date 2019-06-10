@@ -1,3 +1,9 @@
+trigger:
+  paths:
+    exclude:
+    - README.md
+    - CHANGELOG.md
+
 stages:
 - stage: Test
   jobs:
