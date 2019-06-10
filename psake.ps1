@@ -112,7 +112,7 @@ Task Test -Depends Sanity {
         $code_cov_params = @{
             CodeCoverage = $test_results.CodeCoverage
             RepoRoot = $ProjectRoot
-            Path = $coverage_file
+            Path = $code_cov_file
         }
         Export-CodeCovIoJson @code_cov_params
         $coverage_id = "PowerShell-$ps_edition-$ps_version-$ps_platform"

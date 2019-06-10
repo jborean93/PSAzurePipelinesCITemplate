@@ -16,13 +16,16 @@ stages:
       vmImage: ubuntu-16.04
     steps:
     - script: pwsh -File ./build.ps1
+      displayName: Run tests
       env:
         CODECOV_TOKEN: $(codecov_token)
+
     - task: PublishTestResults@2
       condition: always()
       inputs:
         testResultsFormat: NUnit
         testResultsFiles: Build/TestResults_PS*.xml
+
     - task: PublishCodeCoverageResults@1
       condition: always()
       inputs:
@@ -35,14 +38,19 @@ stages:
       vmImage: windows-2019
     steps:
     - script: choco.exe install codecov --yes --no-progress
+      displayName: Install codecov.exe
+
     - script: powershell.exe -File .\build.ps1
+      displayName: Run tests
       env:
         CODECOV_TOKEN: $(codecov_token)
+
     - task: PublishTestResults@2
       condition: always()
       inputs:
         testResultsFormat: NUnit
         testResultsFiles: Build/TestResults_PS*.xml
+
     - task: PublishCodeCoverageResults@1
       condition: always()
       inputs:
@@ -56,14 +64,19 @@ stages:
       vmImage: windows-2019
     steps:
     - script: choco.exe install codecov --yes --no-progress
+      displayName: Install codecov.exe
+
     - script: pwsh.exe -File .\build.ps1
+      displayName: Run tests
       env:
         CODECOV_TOKEN: $(codecov_token)
+
     - task: PublishTestResults@2
       condition: always()
       inputs:
         testResultsFormat: NUnit
         testResultsFiles: Build/TestResults_PS*.xml
+
     - task: PublishCodeCoverageResults@1
       condition: always()
       inputs:
