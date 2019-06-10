@@ -102,12 +102,13 @@ Task Init {
     New-Item -Path $BuildPath -ItemType Directory > $null
 
     if ($env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines', 'Travis CI')) {
+        $nl
         if ((-not (Get-Variable -Name IsWindows -ErrorAction Ignore)) -or $IsWindows) {
             'Installing codecov.exe which chocolatey'
             &choco.exe install codecov --yes --no-progress
         } else {
             'Downloading codecov.sh with wget'
-            &wget -O codecov.sh https://codecov.io/bash -q; chmod +x codecov.sh
+            Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile codecov.sh
         }
     }
 
