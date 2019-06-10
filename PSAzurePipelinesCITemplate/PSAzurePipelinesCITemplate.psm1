@@ -9,27 +9,22 @@
 # the Public and Private functions into the 1 psm1 file for faster module
 # loading.
 
-if (Test-Path -LiteralPath $PSScriptRoot\Public) {
-    $public = @( Get-ChildItem -Path $PSScriptRoot\Public\*.ps1 -ErrorAction SilentlyContinue )
-} else {
-    $public = @()
-}
-if (Test-Path -LiteralPath $PSScriptRoot\Private) {
-    $private = @( Get-ChildItem -Path $PSScriptRoot\Private\*.ps1 -ErrorAction SilentlyContinue )
-} else {
-    $private = @()
-}
+$public_functions = [System.Collections.Generic.List`1[System.String]]@()
+foreach ($folder in @('Public', 'Private')) {
+    $folder_path = Join-Path $PSScriptRoot -ChildPath $folder
 
-# dot source the files
-foreach ($import in @($public + $private)) {
-    try {
-        . $import.FullName
-    } catch {
-        Write-Error -Message "Failed to import function $($import.FullName): $_"
+    if (Test-Path -LiteralPath $folder_path) {
+        $search_path = Join-Path -Path $folder_path -ChildPath '*.ps1'
+
+        foreach ($script_path in Get-ChildItem -Path $search_path -ErrorAction Ignore) {
+            . $script_path.FullName
+
+            if ($folder -eq 'Public') {
+                $public_functions.Add($script_path.BaseName)
+            }
+        }
     }
 }
-
-$public_functions = $public.Basename
 
 ### END TEMPLATED EXPORT FUNCTIONS ###
 
