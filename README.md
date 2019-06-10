@@ -1,5 +1,6 @@
 # PSAzurePipelinesCITemplate
 
+[![Build Status](https://dev.azure.com/jborean93/jborean93/_apis/build/status/jborean93.PSAzurePipelinesCITemplate?branchName=master)](https://dev.azure.com/jborean93/jborean93/_build/latest?definitionId=1&branchName=master)
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/PSAzurePipelinesCITemplate.svg)](https://www.powershellgallery.com/packages/PSAzurePipelinesCITemplate)
 [![codecov](https://codecov.io/gh/jborean93/PSAzurePipelinesCITemplate/branch/master/graph/badge.svg)](https://codecov.io/gh/jborean93/PSAzurePipelinesCITemplate)
 
