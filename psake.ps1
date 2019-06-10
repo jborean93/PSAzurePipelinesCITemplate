@@ -101,6 +101,16 @@ Task Init {
     }
     New-Item -Path $BuildPath -ItemType Directory > $null
 
+    if ($env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines', 'Travis CI')) {
+        if ((-not (Get-Variable -Name IsWindows -ErrorAction Ignore)) -or $IsWindows) {
+            'Installing codecov.exe which chocolatey'
+            &choco.exe install codecov --yes --no-progress
+        } else {
+            'Downloading codecov.sh with wget'
+            &wget -O codecov.sh https://codecov.io/bash -q; chmod +x codecov.sh
+        }
+    }
+
     $nl
 }
 
@@ -196,10 +206,10 @@ Task Test -Depends Sanity {
             "`"$coverage_id`""
         )
 
-        if (Test-Path -LiteralPath env:CODECOV_TOKEN) {
-            $upload_args.Add('-t')
-            $upload_args.Add($env:CODECOV_TOKEN)
-        }
+        #if (Test-Path -LiteralPath env:CODECOV_TOKEN) {
+        #    $upload_args.Add('-t')
+        #    $upload_args.Add($env:CODECOV_TOKEN)
+        #}
 
         if (Get-Command -Name codecov.exe -ErrorAction Ignore) {
             $code_cov_exe = 'codecov.exe'

@@ -18,9 +18,6 @@ stages:
     pool:
       vmImage: ubuntu-16.04
     steps:
-    - script: wget -O codecov.sh https://codecov.io/bash -q; chmod +x codecov.sh
-      displayName: Download codecov uploader
-
     - script: pwsh -File ./build.ps1
       displayName: Run tests
       env:
@@ -43,9 +40,6 @@ stages:
     pool:
       vmImage: windows-2019
     steps:
-    - script: choco.exe install codecov --yes --no-progress
-      displayName: Install codecov.exe
-
     - script: powershell.exe -File .\build.ps1
       displayName: Run tests
       env:
@@ -63,15 +57,16 @@ stages:
         codeCoverageTool: jaCoCo
         summaryFileLocation: Build/Coverage_PS*.xml
 
+    - task: PublishPipelineArtifact@0
+      inputs:
+        artifactName: module
+        targetPath: Build/${Build.Repository.Name}
 
   - job: TestWindowsPSCore
     displayName: Windows PowerShell Core
     pool:
       vmImage: windows-2019
     steps:
-    - script: choco.exe install codecov --yes --no-progress
-      displayName: Install codecov.exe
-
     - script: pwsh.exe -File .\build.ps1
       displayName: Run tests
       env:
@@ -90,15 +85,20 @@ stages:
         summaryFileLocation: Build/Coverage_PS*.xml
 
 - stage: Publish
-  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/v'))
+  #condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/v'))
   jobs:
   - job: Publish
     pool:
       vmImage: windows-2019
     steps:
+    - task: DownloadPipelineArtifact@0
+      inputs:
+        artifactName: amodule
+        targetPath: Build
     - pwsh: |
         Install-Module -Name PSDeploy -Force
-        Invoke-PSDeploy -Path ./deploy.psdeploy.ps1 -Recurse $false -Force -Tags Release
+        Get-ChildItem Build
+        #Invoke-PSDeploy -Path ./deploy.psdeploy.ps1 -Recurse $false -Force -Tags Release
       displayName: PowerShell Gallery
       env:
         NugetApiKey: $(nuget_api_key)
