@@ -20,7 +20,12 @@ stages:
       condition: always()
       inputs:
         testResultsFormat: NUnit
-        testReulstsFiles: Build/TestResults_PS*.xml
+        testResultsFiles: Build/TestResults_PS*.xml
+    - task: PublishCodeCoverageResults@1
+      condition: always()
+      inputs:
+        codeCoverageTool: jaCoCo
+        summaryFileLocation: Build/Coverage_PS*.xml
 
   - job: TestWindowsPSDesktop
     displayName: Windows PowerShell Desktop
@@ -32,7 +37,12 @@ stages:
       condition: always()
       inputs:
         testResultsFormat: NUnit
-        testReulstsFiles: Build/TestResults_PS*.xml
+        testResultsFiles: Build/TestResults_PS*.xml
+    - task: PublishCodeCoverageResults@1
+      condition: always()
+      inputs:
+        codeCoverageTool: jaCoCo
+        summaryFileLocation: Build/Coverage_PS*.xml
 
 
   - job: TestWindowsPSCore
@@ -45,7 +55,12 @@ stages:
       condition: always()
       inputs:
         testResultsFormat: NUnit
-        testReulstsFiles: Build/TestResults_PS*.xml
+        testResultsFiles: Build/TestResults_PS*.xml
+    - task: PublishCodeCoverageResults@1
+      condition: always()
+      inputs:
+        codeCoverageTool: jaCoCo
+        summaryFileLocation: Build/Coverage_PS*.xml
 
 - stage: Publish
   jobs:

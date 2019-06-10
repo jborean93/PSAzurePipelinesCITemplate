@@ -73,10 +73,20 @@ Task Test -Depends Sanity {
         $code_coverage.Add([System.IO.Path]::Combine($private_path, '*.ps1'))
     }
 
-    $test_date = Get-Date -UFormat "%Y%m%d-%H%M%S"
-    $test_file = Join-Path -Path $BuildPath -ChildPath "TestResults_PS$($ps_version)_$($test_date).xml"
+    $ps_edition = 'Desktop'
+    if ($PSVersionTable.ContainsKey('PSEdition')) {
+        $ps_edition = $PSVersionTable.PSEdition
+    }
+    $ps_platform = 'Win32NT'
+    if ($PSVersionTable.ContainsKey('Platform')) {
+        $ps_platform = $PSVersionTable.Platform
+    }
+    $output_id = "PS{0}_{1}_{2}_{3}" -f ($ps_version, $ps_edition, $ps_platform, (Get-Date -UFormat "%Y%m%d-%H%M%S"))
+    $test_file = Join-Path -Path $BuildPath -ChildPath "TestResults_$($output_id).xml"
+    $coverage_file = Join-Path -Path $BuildPath -ChildPath "Coverage_$($output_id).xml"
     $pester_params = @{
         CodeCoverage = $code_coverage.ToArray()
+        CodeCoverageOutputFile = $coverage_file
         OutputFile = $test_file
         OutputFormat = 'NUnitXml'
         PassThru = $true
@@ -89,24 +99,20 @@ Task Test -Depends Sanity {
     $coverage_file = $null
     $git_folder = Join-Path -Path $ProjectRoot -ChildPath '.git'
     if ((Get-Command -Name git.exe -ErrorAction Ignore) -and (Test-Path -LiteralPath $git_folder)) {
-        $coverage_file = Join-Path -Path $BuildPath -ChildPath "CodeCoverage_PS$($ps_version)_$($test_date).json"
+        $coverage_file = Join-Path -Path $BuildPath -ChildPath "Coverage_CodeCov_$($output_id).json"
         $code_cov_params = @{
             CodeCoverage = $test_results.CodeCoverage
             RepoRoot = $ProjectRoot
             Path = $coverage_file
         }
         Export-CodeCovIoJson @code_cov_params
-
-        # A warning in git may cause LASTEXITCODE to not be 0, we reset it here
-        # so the pipeline doesn't fail
-        $global:LASTEXITCODE = 0
     }
 
     if ($env:BHBuildSystem -eq 'AppVeyor') {
         $web_client = New-Object -TypeName System.Net.WebClient
         $web_client.UploadFile(
             "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
-            [System.IO.Path]::Combine($ProjectRoot, $test_file)
+            $test_file
         )
     }
 
@@ -116,14 +122,6 @@ Task Test -Depends Sanity {
 
     # TODO: Support Linux
     if ((Get-Command -Name codecov.exe -ErrorAction Ignore) -and $env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines', 'Travis CI') -and $null -ne $coverage_file) {
-        $ps_edition = 'Desktop'
-        if ($PSVersionTable.ContainsKey('PSEdition')) {
-            $ps_edition = $PSVersionTable.PSEdition
-        }
-        $ps_platform = 'Win32NT'
-        if ($PSVersionTable.ContainsKey('Platform')) {
-            $ps_platform = $PSVersionTable.Platform
-        }
         $coverage_id = "PowerShell-$ps_edition-$ps_version-$ps_platform"
 
         "$nl`tSTATUS: Uploading code coverage results with the ID: $coverage_id"
