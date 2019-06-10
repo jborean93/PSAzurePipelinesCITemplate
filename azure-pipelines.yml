@@ -1,10 +1,10 @@
 trigger:
   branches:
     include:
-    - v*
+    - master
   tags:
     include:
-    - master
+    - v*
   paths:
     exclude:
     - README.md
@@ -93,7 +93,7 @@ stages:
     - script: echo %BUILD_SOURCEBRANCHNAME%
 
 - stage: Publish
-  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
+  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/v'))
   jobs:
   - job: Publish
     pool:
