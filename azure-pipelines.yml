@@ -125,7 +125,7 @@ stages:
     - task: DownloadSecureFile@1
       displayName: Download code signing cert
       inputs:
-        secureFile: ps_signing_cert.pfx
+        secureFile: ps_signing_cert.pfx  # This matches the name of the secure file
 
     - pwsh: |
         Install-Module -Name PSDeploy -Force
