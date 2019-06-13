@@ -66,7 +66,7 @@ stages:
     pool:
       vmImage: windows-2019
     steps:
-    - script: '&"$env:windir\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -File .\build.ps1'
+    - script: '"%windir%\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -File .\build.ps1'
       displayName: Run tests
       env:
         CODECOV_TOKEN: $(codecov_token)
