@@ -61,6 +61,27 @@ stages:
         artifactName: Windows PowerShell Desktop
         targetPath: Build
 
+  - job: TestWindowsPSDesktopx86
+    displayName: Windows PowerShell Desktop - x86
+    pool:
+      vmImage: windows-2019
+    steps:
+    - script: '&"$env:windir\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -File .\build.ps1'
+      displayName: Run tests
+      env:
+        CODECOV_TOKEN: $(codecov_token)
+
+    - task: PublishTestResults@2
+      condition: always()
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: Build/TestResults_PS*.xml
+
+    - task: PublishPipelineArtifact@0
+      inputs:
+        artifactName: Windows PowerShell Desktop - x86
+        targetPath: Build
+
   - job: TestWindowsPSCore
     displayName: Windows PowerShell Core
     pool:
