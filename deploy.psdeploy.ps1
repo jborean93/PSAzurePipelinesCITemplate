@@ -110,7 +110,7 @@ if ($is_appveyor) {
 }
 
 # Sign the module and all the files within.
-if ($null -ne $code_cert_path -and Test-Path -LiteralPath env:CODE_SIGNING_PASS -and 'Release' -in $Tags) {
+if ($null -ne $code_cert_path -and (Test-Path -LiteralPath env:CODE_SIGNING_PASS) -and 'Release' -in $Tags) {
     $cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList @(
         $code_cert_path,
         $env:CODE_SIGNING_PASS
