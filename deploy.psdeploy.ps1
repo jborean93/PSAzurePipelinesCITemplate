@@ -144,7 +144,7 @@ Deploy Module {
 
 # Deploy the published module nupkg to the GitHub release asset
 if ((Test-Path -LiteralPath env:GITHUB_TOKEN) -and 'Release' -in $Tags) {
-    $uri = Get-PSGalleryNupkgUrl -Name $module_name -Version $module_version
+    $uri = Get-PSGalleryNupkgUri -Name $module_name -Version $module_version
     $nupkg_file = "$module_name.nupkg"
     Invoke-Webrequest -Uri $uri -OutFile $nupkg_file
 
