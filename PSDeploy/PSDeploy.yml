@@ -1,0 +1,7 @@
+GitHubAsset:
+  Script: GitHubAsset.ps1
+  Description: Add an asset to an existing GitHub release.
+
+SignScript:
+  Script: SignScript.ps1
+  Description: Signs PowerShell files with a code signing certificate.
