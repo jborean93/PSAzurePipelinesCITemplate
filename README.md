@@ -24,7 +24,13 @@ manual step:
     * Go to the [PowerShell Gallery](https://www.powershellgallery.com) and sign in
     * Click on your account and go to `API Keys`
     * Generate an API key if one has not already been generated
-    * Go to Azure DevOps and add a secure variable called `nuget_api_key` with that token
+    * Go to Azure DevOps and add a secure variable called `psgallery_token` with that token
+* Setup a GitHub token with the `public_repo` (or `repo`) access scope for publishing Nupkg to GitHub releases
+    * Go to [GitHub Personal access tokens](https://github.com/settings/tokens)
+    * Click on `Generate new token`
+    * Add note that identifies the token
+    * Select either `public_repo` or `repo` for the access scope
+    * Go to Azure DevOps and add a secure variable called `github_token` with that token
 
 
 ## Requirements

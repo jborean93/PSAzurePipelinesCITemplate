@@ -10,6 +10,12 @@ trigger:
     - README.md
     - CHANGELOG.md
 
+# Stage to run the tests on, each stage has a job for each of the OS types and configurations we test against. Each job
+# has the following steps;
+#
+#     1. Run the ./build.ps1 script to test the module with the psake build
+#     2. Publish the Pester test results to Azure Pipelines
+#     3. Publish the Build folder for that node which contains the processed module ready for publishing.
 stages:
 - stage: Test
   jobs:
@@ -76,6 +82,8 @@ stages:
         artifactName: Windows PowerShell Core
         targetPath: Build
 
+# Stage to publish the PowerShell module to PSGallery and optionally the GitHub repo. This only runs when a release has
+# been made on GitHub that starts with v{version}.
 - stage: Publish
   condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/v'))
   jobs:
@@ -93,4 +101,5 @@ stages:
         Invoke-PSDeploy -Path ./deploy.psdeploy.ps1 -Recurse $false -Force -Tags Release
       displayName: Publish Nupkg
       env:
-        NugetApiKey: $(nuget_api_key)
+        PSGALLERY_TOKEN: $(psgallery_token)
+        GITHUB_TOKEN: $(github_token)  # Omit to not publish the Nupkg on the GitHub release asset

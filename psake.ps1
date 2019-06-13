@@ -101,7 +101,7 @@ Task Init {
     }
     New-Item -Path $BuildPath -ItemType Directory > $null
 
-    if ($env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines', 'Travis CI')) {
+    if ($env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines')) {
         $nl
         if ((-not (Get-Variable -Name IsWindows -ErrorAction Ignore)) -or $IsWindows) {
             'Installing codecov.exe which chocolatey'
@@ -286,6 +286,11 @@ Task Build -Depends Test {
     $module_file_content = $module_pre_template_lines -join $nl
 
     Set-Content -LiteralPath (Join-Path -Path $module_build -ChildPath $ModuleFile.Name) -Value $module_file_content
+
+    if ($env:BHBuildSystem -eq 'AppVeyor') {
+        "$nl`tSTATUS: Publishing PowerShell module nupkg to AppVeyor artifact"
+        Invoke-PSDeploy -Path (Join-Path -Path $ProjectRoot -ChildPath 'deploy.psdeploy.ps1') -Recurse $false -Force -Tags AppVeyor
+    }
 
     $nl
 }

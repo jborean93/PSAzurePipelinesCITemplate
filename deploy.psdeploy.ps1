@@ -31,85 +31,107 @@ Function Get-PSGalleryNupkgUri {
     return $gallery_meta.Content.src
 }
 
-Function Publish-GitHubReleaseNupkg {
+Function Publish-GitHubReleaseAsset {
     [CmdletBinding()]
     Param (
         [System.String]
         $Name,
 
         [System.String]
-        $Version,
+        $Repository,
+
+        [System.String]
+        $Tag,
 
         [System.String]
         $Path
     )
     $nupkg_item = Get-Item -Path $Path
 
-    $root_uri = "https://api.github.com/repos/$Name"
+    $root_uri = "https://api.github.com/repos/$Repository"
     $headers = @{
-        Authorization = "token $env:GITHUB_API_TOKEN"
+        Authorization = "token $env:GITHUB_TOKEN"
     }
 
     try {
-        $tag_info = Invoke-RestMethod -Uri "$root_uri/releases/tags/$Version" -Headers $headers -ErrorAction Stop`
+        $tag_info = Invoke-RestMethod -Uri "$root_uri/releases/tags/$Tag" -Headers $headers -ErrorAction Stop`
     } catch {
-        Write-Error -Message "Failed to get tag ID for '$Name' with version tag '$Version': $($_.Exception.Message)"
+        Write-Error -Message "Failed to get tag ID for '$Repository' with version tag '$Tag': $($_.Exception.Message)"
         return
     }
-    
-    $publish_uri = "https://uploads.github.com/repos/$Name/releases/$($tag_info.id)/assets?name=$($nupkg_item.Name)"
+
+    $publish_uri = "https://uploads.github.com/repos/$Repository/releases/$($tag_info.id)/assets?name=$Name"
     $headers.'Content-Type' = 'application/octet-stream'
     try {
         Invoke-RestMethod -Uri $publish_uri -Headers $headers -InFile $nupkg_item.FullName > $null
     } catch {
-        Write-Error -Message "Failed to upload nupkg to release: $($_.Exception.Message)"
+        Write-Error -Message "Failed to upload asset to release: $($_.Exception.Message)"
         return
     }
 }
 
 $module_name = (Get-ChildItem -Path ([System.IO.Path]::Combine($DeploymentRoot, 'Build', '*', '*.psd1'))).BaseName
 $source_path = [System.IO.Path]::Combine($DeploymentRoot, 'Build', $module_name)
+$module_version = (Get-Module -Name $source_path -ListAvailable).Version.ToString()
 
-$nupkg_version = $env:APPVEYOR_BUILD_VERSION
-if ((Test-Path -Path env:APPVEYOR_REPO_TAG) -and ([System.Boolean]::Parse($env:APPVEYOR_REPO_TAG))) {
-    $tag_name = $env:APPVEYOR_REPO_TAG_NAME
-    if ($tag_name[0] -eq 'v') {
-        $nupkg_version = $tag_name.Substring(1)
-    } else {
-        $nupkg_version = $tag_name
+# Deploy module to the AppVeyor build artifacts if running in AppVeyor
+if (Test-Path -LiteralPath env:APPVEYOR) {
+    $nupkg_version = $env:APPVEYOR_BUILD_VERSION
+    if ((Test-Path -LiteralPath env:APPVEYOR_REPO_TAG) -and ([System.Boolean]::Parse($env:APPVEYOR_REPO_TAG))) {
+        $nupkg_version = $module_version
+    }
+
+    Deploy AppVeyorNuget {
+        By AppVeyorModule {
+            FromSource $source_path
+            To AppVeyor
+            WithOptions @{
+                SourceIsAbsolute = $true
+                Version = $nupkg_version
+            }
+        }
     }
 }
-
+i
+# Deploy module to PSGallery when tagged with Release
 Deploy Module {
-    By AppVeyorModule {
-        FromSource $source_path
-        To AppVeyor
-        WithOptions @{
-            SourceIsAbsolute = $true
-            Version = $nupkg_version
-        }
-        Tagged AppVeyor
-    }
-
     By PSGalleryModule {
         FromSource $source_path
         To PSGallery
         WithOptions @{
-            ApiKey = $env:NugetApiKey
+            ApiKey = $env:PSGALLERY_TOKEN
             SourceIsAbsolute = $true
         }
         Tagged Release
     }
 }
 
-if ($env:GITHUB_API_TOKEN -and 'Release' -in $Tags) {
-    $uri = Get-PSGalleryNupkgUrl -Name $module_name -Version '000'
+# Deploy the published module nupkg to the GitHub release asset
+if (Test-Path -LiteralPath env:GITHUB_TOKEN -and 'Release' -in $Tags) {
+    # Get the repository name and release tag based on the CI system we are running on.
+    if (Test-Path -LiteralPath env:APPVEYOR) {
+        # AppVeyor
+        $repository = $env:APPVEYOR_REPO_NAME
+        $tag = $env:APPVEYOR_REPO_TAG_NAME
+    } elseif (Test-Path -LiteralPath env:BUILD_DEFINITIONNAME) {
+        # Azure Pipelines
+        $repository = $env:BUILD_REPOSITORYNAME
+        $tag = $env:BUILD_SOURCEBRANCHNAME
+    }
+
+    $uri = Get-PSGalleryNupkgUrl -Name $module_name -Version $module_version
     $nupkg_file = "$module_name.nupkg"
     Invoke-Webrequest -Uri $uri -OutFile $nupkg_file
 
     try {
         # TODO: Add this as a PSDeploy option
-        Publish-GitHubReleaseNupkg -Name 'jborean93/PSAzurePipelinesCITemplate' -Version 'v0.1.0' -Path $nupkg_file
+        $publish_params = @{
+            Name = "$module_name.$module_version.nupkg"
+            Repository = $repository
+            Tag = $tag
+            Path = $nupkg_file
+        }
+        Publish-GitHubReleaseAsset @publish_params
     }  finally {
         Remove-Item -LiteralPath $nupkg_file -Force
     }
