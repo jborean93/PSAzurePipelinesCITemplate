@@ -69,16 +69,15 @@ if ((Get-PSRepository -Name PSGallery).InstallationPolicy -ne "Trusted") {
 }
 
 @(
+    'BuildHelpers',
+    'Pester',
     'Psake',
     'PSDeploy',
-    'Pester',
-    'BuildHelpers',
-    'PSScriptAnalyzer',
-    [PSCustomObject]@{ Name = 'powershell-yaml'; Version = '0.3.6' }  # Appveyor seems to have issues with newer versions
+    'PSScriptAnalyzer'
 ) | Resolve-Module
 
 Write-Output -InputObject "Setting build environment variables"
-Set-BuildEnvironment -ErrorAction SilentlyContinue
+Set-BuildEnvironment -ErrorAction Ignore
 
 Write-Output -InputObject "Starting build"
 Invoke-psake .\psake.ps1

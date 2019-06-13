@@ -1,7 +1,7 @@
 # Copyright: (c) 2019, Jordan Borean (@jborean93) <jborean93@gmail.com>
 # MIT License (see LICENSE or https://opensource.org/licenses/MIT)
 
-$ErrorActionPreference = 'Stop'
+#Requires -Module BuildHelpers
 
 Function Get-PSGalleryNupkgUri {
     [OutputType([System.String])]
@@ -70,12 +70,19 @@ Function Publish-GitHubReleaseAsset {
     }
 }
 
+$is_appveyor = Test-Path -LiteralPath env:APPVEYOR
+$is_azure_pipelines = Test-Path -LiteralPath env:BUILD_SOURCEBRANCHNAME
+
 $module_name = (Get-ChildItem -Path ([System.IO.Path]::Combine($DeploymentRoot, 'Build', '*', '*.psd1'))).BaseName
 $source_path = [System.IO.Path]::Combine($DeploymentRoot, 'Build', $module_name)
 $module_version = (Get-Module -Name $source_path -ListAvailable).Version.ToString()
 
 # Deploy module to the AppVeyor build artifacts if running in AppVeyor
-if (Test-Path -LiteralPath env:APPVEYOR) {
+if ($is_appveyor) {
+    $repository = $env:APPVEYOR_REPO_NAME
+    $tag = $env:APPVEYOR_REPO_TAG_NAME
+    $code_cert_path = $null
+
     $nupkg_version = $env:APPVEYOR_BUILD_VERSION
     if ((Test-Path -LiteralPath env:APPVEYOR_REPO_TAG) -and ([System.Boolean]::Parse($env:APPVEYOR_REPO_TAG))) {
         $nupkg_version = $module_version
@@ -91,8 +98,39 @@ if (Test-Path -LiteralPath env:APPVEYOR) {
             }
         }
     }
+} elseif ($is_azure_pipelines) {
+    $repository = $env:BUILD_REPOSITORYNAME
+    $tag = $env:BUILD_SOURCEBRANCHNAME
+
+    if (Test-Path -LiteralPath $env:DOWNLOADSECUREFILE_SECUREFILEPATH) {
+        $code_cert_path = $env:DOWNLOADSECUREFILE_SECUREFILEPATH
+    } else {
+        $code_cert_path = $null
+    }
 }
-i
+
+# Sign the module and all the files within.
+if ($null -ne $code_cert_path -and Test-Path -LiteralPath env:CODE_SIGNING_PASS -and 'Release' -in $Tags) {
+    $cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList @(
+        $code_cert_path,
+        $env:CODE_SIGNING_PASS
+    )
+    try {
+        $sign_params = @{
+            Certificate = $cert
+            TimestampServer = 'http://timestamp.comodoca.com'
+            HashAlgorithm = 'sha256'
+            IncludeChain = 'All'
+        }
+        Get-ChildItem -Path $source_path -Recurse -Include '*.psd1', '*.psm1' | ForEach-Object -Process {
+            Set-AuthenticodeSignature -LiteralPath $_.FullName @sign_params > $null
+        }
+    } finally {
+        $cert.Dispose()
+    }
+}
+
+
 # Deploy module to PSGallery when tagged with Release
 Deploy Module {
     By PSGalleryModule {
@@ -108,17 +146,6 @@ Deploy Module {
 
 # Deploy the published module nupkg to the GitHub release asset
 if (Test-Path -LiteralPath env:GITHUB_TOKEN -and 'Release' -in $Tags) {
-    # Get the repository name and release tag based on the CI system we are running on.
-    if (Test-Path -LiteralPath env:APPVEYOR) {
-        # AppVeyor
-        $repository = $env:APPVEYOR_REPO_NAME
-        $tag = $env:APPVEYOR_REPO_TAG_NAME
-    } elseif (Test-Path -LiteralPath env:BUILD_DEFINITIONNAME) {
-        # Azure Pipelines
-        $repository = $env:BUILD_REPOSITORYNAME
-        $tag = $env:BUILD_SOURCEBRANCHNAME
-    }
-
     $uri = Get-PSGalleryNupkgUrl -Name $module_name -Version $module_version
     $nupkg_file = "$module_name.nupkg"
     Invoke-Webrequest -Uri $uri -OutFile $nupkg_file

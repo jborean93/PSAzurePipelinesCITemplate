@@ -10,27 +10,24 @@
 A template repo for running CI of a PowerShell module with
 [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/).
 
-To setup an Azure Pipeline with a new repo you will need to do the following
-manual step:
+When setting up an Azure Pipeline you will first need to define the following
+secret variables;
 
-* Setup the CodeCov token for uploading coverage results
-    * Go to [codecov.io](https://codecov.io) and get the `CODECOV_TOKEN` for the new repository
-    * Go to Azure DevOps and edit the pipeline for the new repo
-    * Go to the variables section for the new pipeline
-    * Add a new variable with the name `codecov_token` and the value as the token from Code Cov
-    * Set the padlock icon to set the variable as a secure variable
-    * Save the variable
-* Setup the PowerShell Gallery API token for pushing the module on release
-    * Go to the [PowerShell Gallery](https://www.powershellgallery.com) and sign in
-    * Click on your account and go to `API Keys`
-    * Generate an API key if one has not already been generated
-    * Go to Azure DevOps and add a secure variable called `psgallery_token` with that token
-* Setup a GitHub token with the `public_repo` (or `repo`) access scope for publishing Nupkg to GitHub releases
-    * Go to [GitHub Personal access tokens](https://github.com/settings/tokens)
-    * Click on `Generate new token`
-    * Add note that identifies the token
-    * Select either `public_repo` or `repo` for the access scope
-    * Go to Azure DevOps and add a secure variable called `github_token` with that token
+* `psgallery_token`: The API token used to publish the module to the [PowerShell Gallery](https://www.powershellgallery.com).
+* `github_token`: The API token used to publish a GitHub assert on a tagged release, this requires the `public_repo` access scope
+* `code_signing_pass`: The password used to decrypt the code signing `.pfx` certificate. Can be omitted if no code signing is required
+* `codecov_token`: The token used to upload coverage results to [codecov.io](https://codecov.io). This is unique per repo and should be set directly as a secret build variable
+
+The `psgallery_token`, `github_token`, and `code_singing_pass` can be set as a
+secret in a common variable group allowing it to be defined one and used in
+multiple builds. It is recommended you explicitly link the build instead of
+allowing all pipeline access.
+
+The final step is to upload a secure file called `ps_signing_cert.pfx` that is
+used for signing the PowerShell module. This step can be skipped if no signing
+is required but requires some changed to the `azure-pipelines.yml`.
+
+_Note: Pull requests runs won't have access to secure variables, be careful to review changes to the CI process in case it exposes one of these vars._
 
 
 ## Requirements
