@@ -104,7 +104,7 @@ Task Init {
     if ($env:BHBuildSystem -in @('AppVeyor', 'Azure Pipelines')) {
         $nl
         if ((-not (Get-Variable -Name IsWindows -ErrorAction Ignore)) -or $IsWindows) {
-            'Installing codecov.exe which chocolatey'
+            'Installing codecov.exe with chocolatey'
             &choco.exe install codecov --yes --no-progress
         } else {
             'Downloading codecov.sh with wget'
