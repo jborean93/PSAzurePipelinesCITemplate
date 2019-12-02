@@ -15,7 +15,7 @@ jobs:
 - job: Build_${{ parameters.jobName }}
   displayName: ${{ parameters.displayName }}
   pool:
-    vmImage: ${{ parameters.host }}
+    vmImage: ${{ parameters.vmImage }}
   steps:
   - script: ${{ parameters.executable }} -File ./build.ps1
     displayName: Run tests
