@@ -14,101 +14,40 @@ trigger:
     - README.md
     - CHANGELOG.md
 
-# Stage to run the tests on, each stage has a job for each of the OS types and configurations we test against. Each job
-# has the following steps;
-#
-#     1. Run the ./build.ps1 script to test the module with the psake build
-#     2. Publish the Pester test results to Azure Pipelines
-#     3. Publish the Build folder for that node which contains the processed module ready for publishing.
+# Stage to build and test the PowerShell module on different hosts
 stages:
-- stage: Test
+- stage: Build
   jobs:
-  - job: TestLinuxPSCore
-    displayName: Linux PowerShell Core
-    pool:
+  - template: azure-pipelines-build.yml
+    parameters:
+      jobName: Linux
+      displayName: Linux PowerShell Core
       vmImage: ubuntu-16.04
-    steps:
-    - script: pwsh -File ./build.ps1
-      displayName: Run tests
-      env:
-        CODECOV_TOKEN: $(codecov_token)
+      executable: pwsh
 
-    - task: PublishTestResults@2
-      condition: always()
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: Build/TestResults_PS*.xml
-
-    - task: PublishPipelineArtifact@0
-      inputs:
-        artifactName: Linux PowerShell Core
-        targetPath: Build
-
-  - job: TestWindowsPSDesktop
-    displayName: Windows PowerShell Desktop
-    pool:
+  - template: azure-pipelines-build.yml
+    parameters:
+      jobName: Windows_Desktop_x64
+      displayName: Windows PowerShell Desktop - x64
       vmImage: windows-2019
-    steps:
-    - script: powershell.exe -File .\build.ps1
-      displayName: Run tests
-      env:
-        CODECOV_TOKEN: $(codecov_token)
+      executable: powershell.exe
 
-    - task: PublishTestResults@2
-      condition: always()
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: Build/TestResults_PS*.xml
-
-    - task: PublishPipelineArtifact@0
-      inputs:
-        artifactName: Windows PowerShell Desktop
-        targetPath: Build
-
-  - job: TestWindowsPSDesktopx86
-    displayName: Windows PowerShell Desktop - x86
-    pool:
+  - template: azure-pipelines-build.yml
+    parameters:
+      jobName: Windows_Desktop_x86
+      displayName: Windows PowerShell Desktop - x86
       vmImage: windows-2019
-    steps:
-    - script: '"%windir%\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -File .\build.ps1'
-      displayName: Run tests
-      env:
-        CODECOV_TOKEN: $(codecov_token)
+      executable: '"%windir%\SysWOW64\WindowsPowerShell\v1.0\powershell.exe"'
 
-    - task: PublishTestResults@2
-      condition: always()
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: Build/TestResults_PS*.xml
-
-    - task: PublishPipelineArtifact@0
-      inputs:
-        artifactName: Windows PowerShell Desktop - x86
-        targetPath: Build
-
-  - job: TestWindowsPSCore
-    displayName: Windows PowerShell Core
-    pool:
+  - template: azure-pipelines-build.yml
+    parameters:
+      jobName: Windows_Core
+      displayName: Windows PowerShell Core
       vmImage: windows-2019
-    steps:
-    - script: pwsh.exe -File .\build.ps1
-      displayName: Run tests
-      env:
-        CODECOV_TOKEN: $(codecov_token)
-
-    - task: PublishTestResults@2
-      condition: always()
-      inputs:
-        testResultsFormat: NUnit
-        testResultsFiles: Build/TestResults_PS*.xml
-
-    - task: PublishPipelineArtifact@0
-      inputs:
-        artifactName: Windows PowerShell Core
-        targetPath: Build
+      executable: pwsh.exe
 
 # Stage to publish the PowerShell module to PSGallery and optionally the GitHub repo. This only runs when a release has
-# been made on GitHub that starts with v{version}.
+# been made on GitHub that starts with 'v'.
 - stage: Publish
   condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/v'))
   jobs:
@@ -116,9 +55,10 @@ stages:
     pool:
       vmImage: windows-2019
     steps:
+    # TODO: See how this fits in with C# modules with different dll's
     - task: DownloadPipelineArtifact@0
       inputs:
-        artifactName: Windows PowerShell Desktop
+        artifactName: Windows PowerShell Desktop - x64
         targetPath: Build
 
     # Omit me if no code signing is needed
